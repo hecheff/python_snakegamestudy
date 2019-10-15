@@ -4,9 +4,10 @@
 # - Lose condition shown when window closed by player loss, including "GAME OVER" message
 # - Bug fix: Direction change causing reverse movement (causing player to eat themself)
 # - Initial player snake length can be easily set by changing one variable (instead of static preset)
+# - Shows player's final score before "GAME OVER" text
 
-#Important Notes before running this script: 
-# - On Windows, this file must be run through the command line. 
+#Important Notes before running this script:
+# - On Windows, this file must be run through the command line.
 #	- Otherwise window issues will occur if run directly on code editors.
 # - 'curses' module is not natively available on Windows. Separate add-on used to allow this to work.
 
@@ -14,12 +15,14 @@ import random	#Needed for generating randomized spawn points for food item
 import curses	#Library for screen-painting and handling keyboard inputs
 
 #Initialize screen drawing
-s = curses.initscr()				
-curses.curs_set(0)					
+s = curses.initscr()
+curses.curs_set(0)
 sh, sw = s.getmaxyx()				#Establish max screen height and width
 w = curses.newwin(sh, sw, 0, 0)     #Declare and set window variable's size and dimensions
 w.keypad(1)                         #Set window keypad
 w.timeout(200)						#Set window srefresh rate of window (ms)
+
+scoreVal = 0        #Initialize score value
 
 #Establish player snake's initial spawn position
 snake_x = sw/4      #Horizontal starting point (x-axis). Start at 1/4 left of window.
@@ -44,7 +47,7 @@ key = curses.KEY_RIGHT  #Set initial last input default
 #Loop until interrupted when player loses
 while True:
 	#Check player status
-    #Lose Conditions: 
+    #Lose Conditions:
     # - Player snake head goes outside boundaries
     # - Player snake head goes inside space which is part of body
     if snake[0][0] in [0, sh] or snake[0][1] in [0, sw] or snake[0] in snake[1:]:
@@ -53,15 +56,15 @@ while True:
             print("Player crashed into wall boundary")
         elif snake[0] in snake[1:]:
             print("Player crashed into self")
-        
+
         curses.endwin()         #Close opened window
+        print("Final Score:",scoreVal)
         print("GAME OVER")
         quit()
-    
-    
+
     next_key = w.getch()                #Listen for keyboard inputs
     changeDirectionCommand = False      #(Re)set flag for determining whether to change direction
-	
+
 	#Set status of key
 	#No change if no inputs detected in frame, otheerwise set to new key input
 	#Set change direction flag to true if keyboard input is different axis movement (e.g. When moving up/down, only allow moving left/right, etc.)
@@ -70,12 +73,12 @@ while True:
         #Check vertical movement
         if next_key != curses.KEY_DOWN and next_key != curses.KEY_UP:
             changeDirectionCommand = True
-    
+
     elif key == curses.KEY_LEFT or key == curses.KEY_RIGHT:
         #Check horizontal movement
         if next_key != curses.KEY_LEFT and next_key != curses.KEY_RIGHT:
             changeDirectionCommand = True
-    
+
     #If change direction flag is true, update this
     if changeDirectionCommand == True:
         key = key if next_key == -1 else next_key
@@ -103,8 +106,10 @@ while True:
             ]
             food = nf if nf not in snake else None
         w.addch(int(food[0]), int(food[1]), curses.ACS_PI)
+
+        scoreVal += 1
     else:
         tail = snake.pop()
         w.addch(int(tail[0]), int(tail[1]), ' ')
-    
+
     w.addch(int(snake[0][0]), int(snake[0][1]), curses.ACS_CKBOARD)
